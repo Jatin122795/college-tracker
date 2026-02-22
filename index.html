@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>College Tracker</title>
+  <style>
+    body{
+      font-family: Arial;
+      text-align: center;
+      margin-top: 50px;
+      background: #f2f2f2;
+    }
+    button{
+      padding: 15px 30px;
+      font-size: 18px;
+      margin: 10px;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+    #status{
+      font-size: 20px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>College Arrival Tracker</h1>
+
+<button onclick="startTracking()">Start Tracking</button>
+<button onclick="stopTracking()">Stop</button>
+
+<div id="status">Status: Not started</div>
+
+<script>
+let watchId;
+let inside = false;
+
+// College location (approx)
+// You can adjust later
+let collegeLat = 28.181;  
+let collegeLng = 76.620;
+let radius = 300; // meters
+
+function startTracking(){
+  if(navigator.geolocation){
+    watchId = navigator.geolocation.watchPosition(checkLocation);
+    document.getElementById("status").innerText = "Tracking started...";
+  }
+}
+
+function stopTracking(){
+  navigator.geolocation.clearWatch(watchId);
+  document.getElementById("status").innerText = "Tracking stopped";
+}
+
+function checkLocation(position){
+  let lat = position.coords.latitude;
+  let lng = position.coords.longitude;
+
+  let distance = getDistance(lat, lng, collegeLat, collegeLng);
+
+  if(distance < radius && !inside){
+    inside = true;
+    document.getElementById("status").innerText = "Inside College";
+
+    sendWhatsApp("I have reached college.");
+  }
+
+  if(distance > radius && inside){
+    inside = false;
+    document.getElementById("status").innerText = "Left College";
+
+    sendWhatsApp("I am leaving college.");
+  }
+}
+
+function sendWhatsApp(msg){
+  let phone = "917065645735"; // your number with country code
+  let url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(msg);
+  window.open(url, "_blank");
+}
+
+function getDistance(lat1, lon1, lat2, lon2){
+  let R = 6371e3;
+  let φ1 = lat1 * Math.PI/180;
+  let φ2 = lat2 * Math.PI/180;
+  let Δφ = (lat2-lat1) * Math.PI/180;
+  let Δλ = (lon2-lon1) * Math.PI/180;
+
+  let a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+          Math.cos(φ1) * Math.cos(φ2) *
+          Math.sin(Δλ/2) * Math.sin(Δλ/2);
+
+  let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+  return R * c;
+}
+</script>
+
+</body>
+</html>
